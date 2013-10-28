@@ -22,19 +22,19 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <gr_block.h>
-#include <gr_io_signature.h>
-#include <osmosdr_source_c.h>
+#include <gnuradio/block.h>
+#include <gnuradio/io_signature.h>
+#include <osmosdr/source.h>
 
 
-class scanner_sink : public gr_block
+class scanner_sink : public gr::block
 {
 	public:
-		scanner_sink(osmosdr_source_c_sptr source, unsigned int vector_length, double centre_freq_1, double centre_freq_2, double bandwidth0, double bandwidth1, double bandwidth2,
+		scanner_sink(osmosdr::source::sptr source, unsigned int vector_length, double centre_freq_1, double centre_freq_2, double bandwidth0, double bandwidth1, double bandwidth2,
 				double step, unsigned int avg_size, double spread, double threshold, double ptime) :
-			gr_block ("scanner_sink",
-				gr_make_io_signature (1, 1, sizeof (float) * vector_length),
-				gr_make_io_signature (0, 0, 0)),
+			gr::block ("scanner_sink",
+				gr::io_signature::make (1, 1, sizeof (float) * vector_length),
+				gr::io_signature::make (0, 0, 0)),
 			m_source(source), //We need the source in order to be able to control it
 			m_buffer(new float[vector_length]), //buffer into which we accumulate the total for averaging
 			m_vector_length(vector_length), //size of the FFT
@@ -182,7 +182,7 @@ class scanner_sink : public gr_block
 			}
 			
 			/* check to see if the signal is close to any other (the same signal often appears with a slightly different centre frequency) */
-			for (double signal: m_signals){
+			BOOST_FOREACH (double signal, m_signals){
 				if ((mid - signal < m_spread) && (signal - mid < m_spread)){ //tpo close
 					return false; //if so, this is not a genuine hit
 				}
@@ -237,7 +237,7 @@ class scanner_sink : public gr_block
 		
 		//std::set<std::pair<double, double>> m_signals;
 		std::set<double> m_signals;
-		osmosdr_source_c_sptr m_source;
+		osmosdr::source::sptr m_source;
 		float *m_buffer;
 		unsigned int m_vector_length;
 		unsigned int m_count;
@@ -257,7 +257,7 @@ class scanner_sink : public gr_block
 
 /* Shared pointer thing gnuradio is fond of */
 typedef boost::shared_ptr<scanner_sink> scanner_sink_sptr;
-scanner_sink_sptr make_scanner_sink(osmosdr_source_c_sptr source, unsigned int vector_length, double centre_freq_1, double centre_freq_2, double bandwidth0, double bandwidth1, double bandwidth2,
+scanner_sink_sptr make_scanner_sink(osmosdr::source::sptr source, unsigned int vector_length, double centre_freq_1, double centre_freq_2, double bandwidth0, double bandwidth1, double bandwidth2,
 	double step, unsigned int avg_size, double spread, double threshold, double ptime)
 {
 	return boost::shared_ptr<scanner_sink>(new scanner_sink(source, vector_length, centre_freq_1, centre_freq_2, bandwidth0, bandwidth1, bandwidth2, step, avg_size, spread, threshold, ptime));
