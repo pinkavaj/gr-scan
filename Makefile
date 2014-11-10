@@ -17,7 +17,7 @@
 #
 
 VERSION=2013102901
-CXXFLAGS=-DVERSION="\"gr-scan $(VERSION)\""  -Wall -lgnuradio-filter -lgnuradio-fft -lgnuradio-runtime -lgnuradio-osmosdr -lboost_system -O2 -s -Wno-unused-function
+CXXFLAGS=-DVERSION="\"gr-scan $(VERSION)\""  -Wall -lgnuradio-filter -lgnuradio-blocks -lgnuradio-pmt -lgnuradio-fft -lgnuradio-runtime -lgnuradio-osmosdr -lboost_system -O2 -s -Wno-unused-function
 
 gr-scan: *.cpp *.hpp Makefile
 	g++ $(CXXFLAGS) -o gr-scan main.cpp
