@@ -201,7 +201,7 @@ argp_option Arguments::options[] = {
 	{"fft-width", 'w', "COUNT", 0, "Width of FFT in samples"},
 	{"step", 'z', "FREQ", 0, "Increment step in MHz"},
 	{"time", 'p', "TIME", 0, "Time in seconds to scan on each frequency"},
-	{"device", 'd', "DEVICE", 0, "Use specific device if more than one (optional)"},
+	{"device", 'd', "DEVICE", 0, "Use specific device if more than one. Ex. rtl=1 or hackrf=0 (Optional)"},
 	{0}
 };
 argp Arguments::argp_i = {options, s_parse_opt, 0, 0};
