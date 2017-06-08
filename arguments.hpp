@@ -33,7 +33,8 @@ class Arguments
 			sample_rate(2000000.0),
 			fft_width(1000.0),
 			step(-1.0),
-			ptime(-1.0)
+			ptime(-1.0),
+			device(0)
 		{
 			argp_parse (&argp_i, argc, argv, 0, 0, this);
 		}
@@ -103,6 +104,11 @@ class Arguments
 			return ptime;
 		}
 		
+		char *get_device()
+		{
+			return device;
+		}
+		
 	private:
 		static error_t s_parse_opt(int key, char *arg, struct argp_state *state)
 		{
@@ -147,6 +153,9 @@ class Arguments
 				case 'p':
 					ptime = atof(arg);
 					break;
+				case 'd':
+					device = atof(arg);
+					break;
 				case ARGP_KEY_ARG:
 					if (state->arg_num > 0){
 						argp_usage (state);
@@ -177,6 +186,7 @@ class Arguments
 		double fft_width;
 		double step;
 		double ptime;
+		char *device;
 };
 
 argp_option Arguments::options[] = {
@@ -191,6 +201,7 @@ argp_option Arguments::options[] = {
 	{"fft-width", 'w', "COUNT", 0, "Width of FFT in samples"},
 	{"step", 'z', "FREQ", 0, "Increment step in MHz"},
 	{"time", 'p', "TIME", 0, "Time in seconds to scan on each frequency"},
+	{"device", 'd', "DEVICE", 0, "Use specific device if more than one (optional)"},
 	{0}
 };
 argp Arguments::argp_i = {options, s_parse_opt, 0, 0};

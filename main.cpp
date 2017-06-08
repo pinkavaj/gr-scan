@@ -37,7 +37,8 @@ int main(int argc, char **argv)
 		arguments.get_avg_size(),
 		arguments.get_spread(),
 		arguments.get_threshold(),
-		arguments.get_time());
+		arguments.get_time(),
+		arguments.get_device());
 	top_block.run();
 	return 0; //actually, we never get here because of the rude way in which we end the scan
 }
