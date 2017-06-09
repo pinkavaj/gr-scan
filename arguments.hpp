@@ -154,7 +154,7 @@ class Arguments
 					ptime = atof(arg);
 					break;
 				case 'd':
-					device = atof(arg);
+					device = arg;
 					break;
 				case ARGP_KEY_ARG:
 					if (state->arg_num > 0){
