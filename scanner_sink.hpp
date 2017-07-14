@@ -21,6 +21,7 @@
 #include <ctime>
 #include <set>
 #include <utility>
+#include <string>
 
 #include <boost/shared_ptr.hpp>
 

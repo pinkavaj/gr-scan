@@ -19,6 +19,7 @@
 
 #include <cmath>
 #include <stdint.h>
+#include <string>
 
 #include <gnuradio/top_block.h>
 #include <osmosdr/source.h>
