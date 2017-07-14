@@ -29,11 +29,13 @@
 #include <gnuradio/blocks/nlog10_ff.h>
 #include "scanner_sink.hpp"
 
+//Modified to include https://git.zx2c4.com/gr-scan/tree/topblock.hpp
+
 class TopBlock : public gr::top_block
 {
 	public:
 		TopBlock(double centre_freq_1, double centre_freq_2, double sample_rate, double fft_width, double bandwidth1, double bandwidth2,
-				double step, unsigned int avg_size, double spread, double threshold, double ptime, char *device) : gr::top_block("Top Block"),
+				double step, unsigned int avg_size, double spread, double threshold, double ptime, const std::string &outcsv, char *device) : gr::top_block("Top Block"),
 			vector_length(sample_rate/fft_width),
 			window(GetWindow(vector_length)),
 			
@@ -45,7 +47,7 @@ class TopBlock : public gr::top_block
 			iir(gr::filter::single_pole_iir_filter_ff::make(1.0, vector_length)),
 			lg(gr::blocks::nlog10_ff::make(10, vector_length, -20 * std::log10(float(vector_length)) -10 * std::log10(float(GetWindowPower()/vector_length)))),
 			/* Sink - this does most of the interesting work */
-			sink(make_scanner_sink(source, vector_length, centre_freq_1, centre_freq_2, sample_rate, bandwidth1, bandwidth2, step, avg_size, spread, threshold, ptime))
+			sink(make_scanner_sink(source, vector_length, centre_freq_1, centre_freq_2, sample_rate, bandwidth1, bandwidth2, step, avg_size, spread, threshold, ptime, outcsv))
 		{
 			/* Set up the OsmoSDR Source */
 			source->set_sample_rate(sample_rate);

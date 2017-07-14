@@ -16,6 +16,7 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 */
 
+// Modified to include https://git.zx2c4.com/gr-scan/tree/main.cpp
 
 #include <cstdio>
 
@@ -38,6 +39,7 @@ int main(int argc, char **argv)
 		arguments.get_spread(),
 		arguments.get_threshold(),
 		arguments.get_time(),
+		arguments.get_outcsv(),
 		arguments.get_device());
 	top_block.run();
 	return 0; //actually, we never get here because of the rude way in which we end the scan
