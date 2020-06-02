@@ -1,5 +1,6 @@
 #
 #	gr-scan - A GNU Radio signal scanner
+#	Copyright (C) 2015 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
 #	Copyright (C) 2012  Nicholas Tomlinson
 #	
 #	This program is free software: you can redistribute it and/or modify
@@ -16,17 +17,23 @@
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 #
 
-VERSION=2013102901
-CXXFLAGS=-DVERSION="\"gr-scan $(VERSION)\""  -Wall -lgnuradio-filter -lgnuradio-blocks -lgnuradio-pmt -lgnuradio-fft -lgnuradio-runtime -lgnuradio-osmosdr -lboost_system -O2 -s -Wno-unused-function
+VERSION = 20160104
+CXXFLAGS ?= -O3 -march=native -fomit-frame-pointer
+CXXFLAGS +=-DVERSION="\"gr-scan $(VERSION)\"" -Wall
+LDLIBS = -lgnuradio-filter -lgnuradio-blocks -lgnuradio-pmt -lgnuradio-fft -lgnuradio-runtime -lgnuradio-osmosdr -lboost_system -llog4cpp
 
-gr-scan: *.cpp *.hpp Makefile
-	g++ $(CXXFLAGS) -o gr-scan main.cpp
+PREFIX ?= /usr
+DESTDIR ?=
+BINDIR ?= $(PREFIX)/bin
+LIBDIR ?= $(PREFIX)/lib
+MANDIR ?= $(PREFIX)/share/man
 
+all: gr-scan
+
+gr-scan: *.cpp *.hpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) *.cpp -o gr-scan $(LDLIBS) $(LDFLAGS)
 clean:
-	rm -f gr-scan gr-scan.tar.gz
+	rm -f gr-scan
 
-dist:
-	mkdir gr-scan-$(VERSION)
-	cp *.cpp *.hpp Makefile COPYING gr-scan-$(VERSION)
-	tar -cf - gr-scan-$(VERSION) | gzip -9 -c - > gr-scan-$(VERSION).tar.gz
-	rm -r gr-scan-$(VERSION)
+install: gr-scan
+	@install -v -d "$(DESTDIR)$(BINDIR)" && install -s -m 0755 -v gr-scan "$(DESTDIR)$(BINDIR)/gr-scan"
