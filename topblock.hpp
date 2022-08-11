@@ -24,7 +24,7 @@
 #include <gnuradio/top_block.h>
 #include <osmosdr/source.h>
 #include <gnuradio/blocks/stream_to_vector.h>
-#include <gnuradio/fft/fft_vcc.h>
+#include <gnuradio/fft/fft_v.h>
 #include <gnuradio/blocks/complex_to_mag_squared.h>
 #include <gnuradio/filter/single_pole_iir_filter_ff.h>
 #include <gnuradio/blocks/nlog10_ff.h>
@@ -37,13 +37,15 @@ class TopBlock : public gr::top_block
 	public:
 		TopBlock(double centre_freq_1, double centre_freq_2, double sample_rate, double fft_width, double bandwidth1, double bandwidth2,
 				double step, unsigned int avg_size, double spread, double threshold, double ptime, const std::string &outcsv, char *device) : gr::top_block("Top Block"),
-			vector_length(sample_rate/fft_width),
+			vector_length( (sample_rate / fft_width) ),
 			window(GetWindow(vector_length)),
 			
 			source(osmosdr::source::make(device)), /* OsmoSDR Source if device is null then it should auto pick the lowest index device*/
-			stv(gr::blocks::stream_to_vector::make(sizeof(float)*2, vector_length)), /* Stream to vector */
-			/* Based on the logpwrfft (a block implemented in python) */
-			fft(gr::fft::fft_vcc::make(vector_length, true, window, false, 1)),
+			stv(gr::blocks::stream_to_vector::make(sizeof(float)*2, vector_length / 2)), /* Stream to vector */
+			
+			// fft_size = vector_length
+			fft(gr::fft::fft_v<float, false>::make(vector_length, window, false, 1)),
+			
 			ctf(gr::blocks::complex_to_mag_squared::make(vector_length)),
 			iir(gr::filter::single_pole_iir_filter_ff::make(1.0, vector_length)),
 			lg(gr::blocks::nlog10_ff::make(10, vector_length, -20 * std::log10(float(vector_length)) -10 * std::log10(float(GetWindowPower()/vector_length)))),
@@ -65,6 +67,8 @@ class TopBlock : public gr::top_block
 			connect(ctf, 0, iir, 0);
 			connect(iir, 0, lg, 0);
 			connect(lg, 0, sink, 0);
+			// no known conversion for argument 3 from ‘scanner_sink_sptr’ {aka ‘boost::shared_ptr<scanner_sink>’} to ‘gr::basic_block_sptr’ {aka ‘std::shared_ptr<gr::basic_block>’}
+
 		}
 		
 	private:
@@ -88,7 +92,7 @@ class TopBlock : public gr::top_block
 		double GetWindowPower()
 		{
 			double total = 0.0;
-			BOOST_FOREACH (double d, window){
+			for (double d : window){
 				total += d*d;
 			}
 			return total;
@@ -99,7 +103,10 @@ class TopBlock : public gr::top_block
 		
 		osmosdr::source::sptr source;
 		gr::blocks::stream_to_vector::sptr stv;
-		gr::fft::fft_vcc::sptr fft;
+
+		//template <class T, bool forward>
+		gr::fft::fft_v<float, false>::sptr fft;
+
 		gr::blocks::complex_to_mag_squared::sptr ctf;
 		gr::filter::single_pole_iir_filter_ff::sptr iir;
 		gr::blocks::nlog10_ff::sptr lg;

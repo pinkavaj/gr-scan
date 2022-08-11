@@ -205,7 +205,7 @@ class scanner_sink : public gr::block
 			}
 			
 			/* check to see if the signal is close to any other (the same signal often appears with a slightly different centre frequency) */
-			BOOST_FOREACH (double signal, m_signals){
+			for (double signal : m_signals){
 				if ((mid - signal < m_spread) && (signal - mid < m_spread)){ //tpo close
 					return false; //if so, this is not a genuine hit
 				}
@@ -297,9 +297,9 @@ class scanner_sink : public gr::block
 };
 
 /* Shared pointer thing gnuradio is fond of */
-typedef boost::shared_ptr<scanner_sink> scanner_sink_sptr;
+typedef std::shared_ptr<scanner_sink> scanner_sink_sptr;
 scanner_sink_sptr make_scanner_sink(osmosdr::source::sptr source, unsigned int vector_length, double centre_freq_1, double centre_freq_2, double bandwidth0, double bandwidth1, double bandwidth2,
 	double step, unsigned int avg_size, double spread, double threshold, double ptime, const std::string &outcsv)
 {
-	return boost::shared_ptr<scanner_sink>(new scanner_sink(source, vector_length, centre_freq_1, centre_freq_2, bandwidth0, bandwidth1, bandwidth2, step, avg_size, spread, threshold, ptime, outcsv));
+	return std::shared_ptr<scanner_sink>(new scanner_sink(source, vector_length, centre_freq_1, centre_freq_2, bandwidth0, bandwidth1, bandwidth2, step, avg_size, spread, threshold, ptime, outcsv));
 }

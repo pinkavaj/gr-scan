@@ -35,7 +35,7 @@ class Arguments
 			fft_width(1000.0),
 			step(-1.0),
 			ptime(-1.0),
-			device(0)
+			device()
 		{
 			argp_parse (&argp_i, argc, argv, 0, 0, this);
 		}
@@ -113,7 +113,7 @@ class Arguments
 		
 		char *get_device()
 		{
-			return device;
+			return &*device.begin();
 		}
 		
 	private:
@@ -164,7 +164,7 @@ class Arguments
 					outcsv = std::string(arg);
 					break;
 				case 'd':
-					device = arg;
+					device = std::string(arg);
 					break;
 				case ARGP_KEY_ARG:
 					if (state->arg_num > 0){
@@ -197,7 +197,7 @@ class Arguments
 		double step;
 		double ptime;
 		std::string outcsv;
-		char *device;
+		std::string device;
 };
 
 argp_option Arguments::options[] = {
