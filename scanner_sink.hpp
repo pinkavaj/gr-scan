@@ -16,9 +16,12 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 */
 
+// Modified to output CSV from https://git.zx2c4.com/gr-scan/tree/scanner_sink.hpp
+
 #include <ctime>
 #include <set>
 #include <utility>
+#include <string>
 
 #include <boost/shared_ptr.hpp>
 
@@ -31,7 +34,8 @@ class scanner_sink : public gr::block
 {
 	public:
 		scanner_sink(osmosdr::source::sptr source, unsigned int vector_length, double centre_freq_1, double centre_freq_2, double bandwidth0, double bandwidth1, double bandwidth2,
-				double step, unsigned int avg_size, double spread, double threshold, double ptime) :
+				double step, unsigned int avg_size, double spread, double threshold, double ptime,
+				const std::string &outcsv) :
 			gr::block ("scanner_sink",
 				gr::io_signature::make (1, 1, sizeof (float) * vector_length),
 				gr::io_signature::make (0, 0, 0)),
@@ -50,14 +54,31 @@ class scanner_sink : public gr::block
 			m_threshold(threshold), //threshold in dB for discovery
 			m_spread(spread), //minumum distance between radio signals (overlapping scans might produce slightly different frequencies)
 			m_time(ptime), //the amount of time to listen on the same frequency for
-			m_start_time(time(0)) //the start time of the scan (useful for logging/reporting/monitoring)
+			m_start_time(time(0)), //the start time of the scan (useful for logging/reporting/monitoring)
+			m_outcsv(NULL)
 		{
 			ZeroBuffer();
+			//Taken from https://git.zx2c4.com/gr-scan/tree/scanner_sink.hpp
+			if (!outcsv.empty()) {
+				bool write_csv_header = access(outcsv.c_str(), F_OK) == -1;
+				m_outcsv = fopen(outcsv.c_str(), "a+");
+				if (!m_outcsv) {
+					fprintf(stderr, "[-] Error opening output CSV file %s\n", outcsv.c_str());
+					exit(1);
+				}
+				if (write_csv_header) {
+					fprintf(m_outcsv, "time,frequency_mhz,width_khz,peak,diff\n");
+					fflush(m_outcsv);
+				}
+			}	
 		}
 		
 		virtual ~scanner_sink()
 		{
 			delete []m_buffer; //delete the buffer
+			//Taken from https://git.zx2c4.com/gr-scan/tree/scanner_sink.hpp
+			if (m_outcsv)
+				fclose(m_outcsv);
 		}
 		
 	private:
@@ -159,6 +180,8 @@ class scanner_sink : public gr::block
 						if (TrySignal(freqs[max], freqs[min])){
 							printf("[+] %02u:%02u:%02u: Found signal: at %f MHz of width %f kHz, peak power %f dB (difference %f dB)\n",
 								hours, minutes, seconds, (freqs[max] + freqs[min]) / 2000000.0, (freqs[max] - freqs[min])/1000.0, bands1[peak], diffs[peak]);
+							// Taken from https://git.zx2c4.com/gr-scan/tree/scanner_sink.hpp
+							WriteCSV((freqs[max] + freqs[min]) / 2000000.0, (freqs[max] - freqs[min])/1000.0, bands1[peak], diffs[peak]);
 						}
 					}
 				}
@@ -182,7 +205,7 @@ class scanner_sink : public gr::block
 			}
 			
 			/* check to see if the signal is close to any other (the same signal often appears with a slightly different centre frequency) */
-			BOOST_FOREACH (double signal, m_signals){
+			for (double signal : m_signals){
 				if ((mid - signal < m_spread) && (signal - mid < m_spread)){ //tpo close
 					return false; //if so, this is not a genuine hit
 				}
@@ -235,6 +258,23 @@ class scanner_sink : public gr::block
 			}
 		}
 		
+		// Taken from https://git.zx2c4.com/gr-scan/tree/scanner_sink.hpp
+		void WriteCSV(float freq, float width, float peak, float diff)
+		{
+			time_t timer;
+			struct tm *tm_info;
+			char buf[26];
+	
+			if (!m_outcsv)
+				return;
+	
+			time(&timer);
+			tm_info = localtime(&timer);
+			strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", tm_info);
+			fprintf(m_outcsv, "%s,%f,%f,%f,%f\n", buf, freq, width, peak, diff);
+			fflush(m_outcsv);
+		}
+		
 		//std::set<std::pair<double, double>> m_signals;
 		std::set<double> m_signals;
 		osmosdr::source::sptr m_source;
@@ -253,12 +293,13 @@ class scanner_sink : public gr::block
 		double m_spread;
 		double m_time;
 		time_t m_start_time;
+		FILE *m_outcsv;
 };
 
 /* Shared pointer thing gnuradio is fond of */
-typedef boost::shared_ptr<scanner_sink> scanner_sink_sptr;
+typedef std::shared_ptr<scanner_sink> scanner_sink_sptr;
 scanner_sink_sptr make_scanner_sink(osmosdr::source::sptr source, unsigned int vector_length, double centre_freq_1, double centre_freq_2, double bandwidth0, double bandwidth1, double bandwidth2,
-	double step, unsigned int avg_size, double spread, double threshold, double ptime)
+	double step, unsigned int avg_size, double spread, double threshold, double ptime, const std::string &outcsv)
 {
-	return boost::shared_ptr<scanner_sink>(new scanner_sink(source, vector_length, centre_freq_1, centre_freq_2, bandwidth0, bandwidth1, bandwidth2, step, avg_size, spread, threshold, ptime));
+	return std::shared_ptr<scanner_sink>(new scanner_sink(source, vector_length, centre_freq_1, centre_freq_2, bandwidth0, bandwidth1, bandwidth2, step, avg_size, spread, threshold, ptime, outcsv));
 }

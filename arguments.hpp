@@ -18,6 +18,7 @@
 
 #include <stdlib.h>
 #include <argp.h>
+#include <string>
 
 class Arguments
 {
@@ -33,7 +34,8 @@ class Arguments
 			sample_rate(2000000.0),
 			fft_width(1000.0),
 			step(-1.0),
-			ptime(-1.0)
+			ptime(-1.0),
+			device()
 		{
 			argp_parse (&argp_i, argc, argv, 0, 0, this);
 		}
@@ -103,6 +105,17 @@ class Arguments
 			return ptime;
 		}
 		
+		std::string get_outcsv()
+		{
+			return outcsv;
+		}
+
+		
+		char *get_device()
+		{
+			return &*device.begin();
+		}
+		
 	private:
 		static error_t s_parse_opt(int key, char *arg, struct argp_state *state)
 		{
@@ -147,6 +160,12 @@ class Arguments
 				case 'p':
 					ptime = atof(arg);
 					break;
+				case 'o':
+					outcsv = std::string(arg);
+					break;
+				case 'd':
+					device = std::string(arg);
+					break;
 				case ARGP_KEY_ARG:
 					if (state->arg_num > 0){
 						argp_usage (state);
@@ -177,6 +196,8 @@ class Arguments
 		double fft_width;
 		double step;
 		double ptime;
+		std::string outcsv;
+		std::string device;
 };
 
 argp_option Arguments::options[] = {
@@ -191,6 +212,8 @@ argp_option Arguments::options[] = {
 	{"fft-width", 'w', "COUNT", 0, "Width of FFT in samples"},
 	{"step", 'z', "FREQ", 0, "Increment step in MHz"},
 	{"time", 'p', "TIME", 0, "Time in seconds to scan on each frequency"},
+	{"output-csv", 'o', "OUTCSV", 0, "Output results to CSV file (default: [none])"},
+	{"device", 'd', "DEVICE", 0, "Specify device to use. Ex. rtl=0 or hackrf=1 (Mandatory)"},
 	{0}
 };
 argp Arguments::argp_i = {options, s_parse_opt, 0, 0};

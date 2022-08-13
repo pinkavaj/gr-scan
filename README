@@ -2,3 +2,7 @@ Fast radio spectrum scanner based on SDR and GnuRadio.
 
 Tune to frequencies in specified range and tri fing peak in frequency power spectrum.
 Print frequency and bandwidth of found peaks.
+
+Example Useage:
+./gr-scan -x 17 -y 20 -d rtl=0
+./gr-scan -x 100 -y 103 -d file=./out.wav,rate=2000000
